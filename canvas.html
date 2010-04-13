@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Canvas</title>
+	<link rel="stylesheet" href="styles.css">
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
+
+    <script type="text/javascript"><!--
+		$(document).ready(function(){
+
+			// create dropzone
+			var dropzone = document.getElementById("dropzone");
+			dropzone.addEventListener("dragover", function(event) {
+			  	event.preventDefault();
+				$(dropzone).toggleClass("hover"); //gives the flashing effect
+			}, true);
+			dropzone.addEventListener("drop", function(event) {
+			  	event.preventDefault();
+				//facy pants effects o_O
+				$("#overlay").fadeTo("slow", 0.7);
+				$(dropzone).hide();
+				
+				//files ready for play
+				var files = event.dataTransfer.files;
+				var filesCount = files.length;
+
+				if (filesCount > 1) {
+					alert("Only one file at a time for now.");
+					return false;
+				}
+			
+				setTimeout(function() {
+	  				for (var i = 0; i < filesCount; i++) {
+	  				  	var file = files[i];
+	  				  	var imageType = /image.*/;
+      				  	
+	  				  	if (!file || !file.type.match(imageType)) {
+	  						alert("There was an error");
+	  						return false;
+	  				  	}
+      				  	
+	  				  	if (typeof(file) != "string") {
+	  						var reader = new FileReader();
+	  						reader.onload = (function(aFile) {return function(e) {
+								dataUrl = e.target.result;
+								Files.resize(dataUrl);
+	  						}})(file);
+	  						reader.readAsDataURL(file);
+	  				  	}
+	  				}
+				}, 1000);
+				
+			}, true);
+			
+			Files = {};
+			RES = new Array("800x600", "1024x768", "1280x960", "1280x1024", "1600x1200", "1920x1200", "2560x1600");
+			
+			// Creates rezized images.
+			Files.resize = function(dataURL) {
+				
+	  			var img = new Image();
+	  			img.src = dataURL;
+	
+		  		img.onload = function() {
+			
+					// Draw original sized element
+					var canvasOrig = document.createElement("canvas");
+
+					$("#preview").append(canvasOrig);
+					var origContext = canvasOrig.getContext("2d");
+					
+					canvasOrig.width = 640;
+		  			canvasOrig.height = 480;
+		  		  	origContext.drawImage(this, 0, 0, 640, 480);
+		
+					// Draw the copies
+					RES.forEach(function(element, index, array){
+
+						var dim = element.split("x"); //dimensions
+						var w = dim[0], h = dim[1];
+						
+						if( !(w == img.width) || !(h == img.height) ) {
+							var canvasCopy = document.createElement("canvas");
+					
+							$("#thumbs").append("<div/>");
+							$("#thumbs div:last").append(canvasCopy);
+							$(canvasCopy).addClass("d"+element).after("<span>"+element+"</span>");
+							
+							var copyCtx = canvasCopy.getContext("2d");
+
+				  			//copy resolution: x, y, w, h
+							canvasCopy.width = w;
+				  			canvasCopy.height = h;
+				  			copyCtx.drawImage(img, 0, 0, w, h);
+							
+							// exhausts memory
+							//var imgURL = canvasCopy.toDataURL("image/png");
+							//$(canvasCopy).wrap("<a href=\""+imgURL+"\" target\"_blank\"></a>");
+							
+						}
+					});
+					
+		  		};
+		
+				$("#overlay").fadeOut("slow");
+				$("#content").fadeIn("fast");
+			}
+    	
+		});
+	</script>
+  </head>
+  <body>
+	
+	<header>
+		<div class="container">
+			<h1>WallSizer</h1>
+			<p><a href="http://curtishenson.com"><img src="logo_icon.png" alt="Created by Curtis Henson"></a></p>
+		</div>
+	</header>
+	
+	<section class="container">
+		
+		<div id="dropzone">
+			<h2>Drop Image Here</h2>
+		</div>
+		
+		<div id="content">
+			<div id="preview"></div>
+			
+			<div id="thumbs">
+				<div class="instructions"><p>Right click and select '<em>Save As</em>' to save full size.</p></div>
+			</div>
+		</div>
+		
+	</section>
+	
+	<section id="info" class="container">
+		<p>WallSizer is an HTML5 Canvas experiment by <a href="http://curtishenson.com">Curtis Henson</a>. It resizes any image to the most popular monitor wallpaper sizes using only Canvas and HTML5. Simply drag an image into the drop zone the save the thumbnail. Thumbnails will save as a full size image.</p>
+	</section>
+	
+	<div id="overlay"></div>
+
+  </body>
+</html>
